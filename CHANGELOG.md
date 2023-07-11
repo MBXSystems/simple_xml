@@ -1,5 +1,9 @@
 # Changelog for simple_xml v0.1
 
+## v0.1.2
+
+* Improved documentation
+
 ## v0.1.1
 
 * Add parsing and XML node access fuctionality
