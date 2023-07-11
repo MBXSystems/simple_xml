@@ -134,6 +134,7 @@ defmodule SimpleXml.XmlNode do
   def text({_node, _attrs, [head | _tail]} = _xml_node) when is_binary(head), do: {:ok, head}
   def text({_node, _attrs, children} = _xml_node), do: {:error, {:text_not_found, children}}
 
+  @spec name_matches?(xml_node(), String.t()) :: boolean()
   defp name_matches?({tag_name, _, _}, tag_name) when is_binary(tag_name), do: true
 
   defp name_matches?({tag_name, _, _}, "*:" <> child_name)
