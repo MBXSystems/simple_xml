@@ -60,9 +60,13 @@ defmodule SimpleXml.XmlNode do
   end
 
   @doc """
-  Obtains the first child of the given node with the given tag name via case-insensitive match.
+  Obtains the first child of the given node with the given string tag name via case-insensitive
+  match.
 
   Use a "*:" prefix for the tag name to ignore namespace associated with the tag name.
+
+  Alternatively, you can supply a regex to pattern match the child name.  When Regex is supplied the
+  Regex's case sensitivity is respected.
 
   ## Examples
 
@@ -106,6 +110,16 @@ defmodule SimpleXml.XmlNode do
       iex> SimpleXml.XmlNode.first_child({"ns:foo", [], [{"xs:bar", [], ["1"]}, {"xs:bar", [], ["2"]}]}, "*:bar")
       {:ok, {"xs:bar", [], ["1"]}}
 
+      ### Use Regex to find a child
+
+      Assume that the following XML has been parsed.
+      ```
+        <ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>
+      ```
+
+      iex> SimpleXml.XmlNode.first_child({"ns:foo", [], [{"xs:bar", [], ["1"]}, {"xs:bar", [], ["2"]}]}, ~r/.*:BAR/i)
+      {:ok, {"xs:bar", [], ["1"]}}
+
       ### Generates an error when there's no child with the given name
 
       Assume that the following XML has been parsed.
@@ -115,11 +129,11 @@ defmodule SimpleXml.XmlNode do
       iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}]}, "baz")
       {:error, {:child_not_found, "baz"}}
   """
-  @spec first_child(xml_node(), String.t()) :: {:ok, xml_node()} | {:error, any()}
+  @spec first_child(xml_node(), String.t() | Regex.t()) :: {:ok, xml_node()} | {:error, any()}
   def first_child({_node, _attrs, []}, _child_name), do: {:error, :node_has_no_children}
 
   def first_child({_node, _attrs, children} = _xml_node, child_name)
-      when is_binary(child_name) and is_list(children) do
+      when is_list(children) and (is_binary(child_name) or is_struct(child_name)) do
     children
     |> Enum.find(&name_matches?(&1, child_name))
     |> case do
@@ -156,7 +170,7 @@ defmodule SimpleXml.XmlNode do
   def text({_node, _attrs, [head | _tail]} = _xml_node) when is_binary(head), do: {:ok, head}
   def text({_node, _attrs, children} = _xml_node), do: {:error, {:text_not_found, children}}
 
-  @spec name_matches?(xml_node(), String.t()) :: boolean()
+  @spec name_matches?(xml_node(), String.t() | Regex.t()) :: boolean()
   defp name_matches?({tag_name, _, _}, tag_name) when is_binary(tag_name), do: true
 
   defp name_matches?({tag_name, _, _}, "*:" <> child_name)
@@ -166,6 +180,9 @@ defmodule SimpleXml.XmlNode do
 
   defp name_matches?({tag_name, _, _}, name) when is_binary(tag_name) and is_binary(name),
     do: String.downcase(tag_name) == String.downcase(name)
+
+  defp name_matches?({tag_name, _, _}, %Regex{} = name) when is_binary(tag_name),
+    do: Regex.match?(name, tag_name)
 
   defp name_matches?(_tag, _child_name), do: false
 end
