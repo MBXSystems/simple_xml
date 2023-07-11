@@ -7,6 +7,7 @@ defmodule SimpleXml.XmlNode do
   For simplicity, this module ignores namespaces within the document.
   """
 
+  @type xml_attribute :: SimpleXml.xml_attribute()
   @type xml_node :: SimpleXml.xml_node()
 
   @doc """
@@ -16,19 +17,19 @@ defmodule SimpleXml.XmlNode do
 
   ### Obtains the value for an attribute
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo a="1" b="2"></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo a="1" b="2"></foo>')
       iex> SimpleXml.XmlNode.attribute(node, "a")
       {:ok, "1"}
 
   ### Returns the first matching attribute it finds
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo a="1" a="2"></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo a="1" a="2"></foo>')
       iex> SimpleXml.XmlNode.attribute(node, "a")
       {:ok, "1"}
 
   ### Generates an error when the attribute is missing
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo a="1" b="2"></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo a="1" b="2"></foo>')
       iex> SimpleXml.XmlNode.attribute(node, "c")
       {:error, {:attribute_not_found, "c"}}
   """
@@ -61,43 +62,43 @@ defmodule SimpleXml.XmlNode do
 
   ### Obtains the first child by the given name
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar><baz>2</baz></foo>')
       iex> SimpleXml.XmlNode.first_child(node, "bar")
       {:ok, {"bar", [], ["1"]}}
 
   ### Returns the first matching node it finds
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><bar>2</bar></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar><bar>2</bar></foo>')
       iex> SimpleXml.XmlNode.first_child(node, "bar")
       {:ok, {"bar", [], ["1"]}}
 
   ### Ignores case when matching tag name
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><bar>2</bar></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar><bar>2</bar></foo>')
       iex> SimpleXml.XmlNode.first_child(node, "BAR")
       {:ok, {"bar", [], ["1"]}}
 
   ### Wildcard ignores tag namespace
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
       iex> SimpleXml.XmlNode.first_child(node, "*:Bar")
       {:ok, {"xs:bar", [], ["1"]}}
 
   ### Use Regex to find a child
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
       iex> SimpleXml.XmlNode.first_child(node, ~r/.*:BAR/i)
       {:ok, {"xs:bar", [], ["1"]}}
 
   ### Generates an error when there's no child with the given name
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar></foo>')
       iex> SimpleXml.XmlNode.first_child(node, "baz")
       {:error, {:child_not_found, [child_name: "baz", actual_children: [{"bar", [], ["1"]}]]}}
 
   ### Generates an error when there no children
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo></foo>')
       iex> SimpleXml.XmlNode.first_child(node, "baz")
       {:error, {:child_not_found, [child_name: "baz", actual_children: []]}}
   """
@@ -122,13 +123,13 @@ defmodule SimpleXml.XmlNode do
 
   ### Returns all children
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar><baz>2</baz></foo>')
       iex> SimpleXml.XmlNode.children(node)
       {:ok, [{"bar", [], ["1"]}, {"baz", [], ["2"]}]}
 
   ### Returns an error if the node doesn't contain a child
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo>bar</foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo>bar</foo>')
       iex> SimpleXml.XmlNode.children(node)
       {:error, {:no_children_found, ["bar"]}}
 
@@ -147,20 +148,20 @@ defmodule SimpleXml.XmlNode do
 
   ### Returns all children by a given string name
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar><baz>2</baz></foo>')
       iex> SimpleXml.XmlNode.children(node, "bar")
       [{"bar", [], ["1"]}]
 
 
   ### Returns all children by a given Regex
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar><baz>2</baz></foo>')
       iex> SimpleXml.XmlNode.children(node, ~r/BA/i)
       [{"bar", [], ["1"]}, {"baz", [], ["2"]}]
 
   ### Returns an empty list, if there are no children
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo>bar</foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo>bar</foo>')
       iex> SimpleXml.XmlNode.children(node, "bar")
       []
   """
@@ -179,17 +180,17 @@ defmodule SimpleXml.XmlNode do
 
   ### All matching children are removed based on a string child name
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
       iex> SimpleXml.XmlNode.drop_children(node, "*:Bar")
       {"ns:foo", [], []}
 
   ### All matching children are removed based on a Regex child name
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:BAR>2</xs:BAR></ns:foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<ns:foo><xs:bar>1</xs:bar><xs:BAR>2</xs:BAR></ns:foo>')
       iex> SimpleXml.XmlNode.drop_children(node, ~r/bar/)
       {"ns:foo", [], [{"xs:BAR", [], ["2"]}]}
   """
-  @spec drop_children(xml_node(), String.t() | Regex.t()) :: [xml_node()]
+  @spec drop_children(xml_node(), String.t() | Regex.t()) :: xml_node()
   def drop_children({node, attrs, children}, child_name)
       when is_list(children) and (is_binary(child_name) or is_struct(child_name)) do
     children
@@ -204,19 +205,77 @@ defmodule SimpleXml.XmlNode do
 
   ### Obtains the text contents of a tag
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo>bar</foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo>bar</foo>')
       iex> SimpleXml.XmlNode.text(node)
       {:ok, "bar"}
 
   ### Generates an error when the tag contains no text
 
-      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar></foo>')
+      iex> {:ok, node} = SimpleXml.parse(~S'<foo><bar>1</bar></foo>')
       iex> SimpleXml.XmlNode.text(node)
       {:error, {:text_not_found, [{"bar", [], ["1"]}]}}
   """
   @spec text(xml_node()) :: {:ok, String.t()} | {:error, any()}
   def text({_node, _attrs, [head | _tail]} = _xml_node) when is_binary(head), do: {:ok, head}
   def text({_node, _attrs, children} = _xml_node), do: {:error, {:text_not_found, children}}
+
+  @doc """
+  Exports the given node, its attributes, and its decendents into an XML string.
+
+  ## Examples
+
+  ### XML can be exported to string
+
+      iex> input = ~S'<foo>bar</foo>'
+      iex> {:ok, node} = SimpleXml.parse(input)
+      iex> SimpleXml.XmlNode.to_string(node) == input
+      true
+
+  ### Case is preserved for tag names and attributes
+
+      iex> input = ~S'<Foo A="1"><BAR>b</BAR></Foo>'
+      iex> {:ok, node} = SimpleXml.parse(input)
+      iex> SimpleXml.XmlNode.to_string(node) == input
+      true
+
+  ### Attribute order is preserved
+
+      iex> input = ~S'<foo b="b" a="a"><bar d="d" c="c">1</bar></foo>'
+      iex> {:ok, node} = SimpleXml.parse(input)
+      iex> SimpleXml.XmlNode.to_string(node) == input
+      true
+  """
+  @spec to_string(String.t() | xml_node() | [xml_node()] | [xml_attribute()]) :: String.t()
+  def to_string(text) when is_binary(text), do: text
+
+  def to_string(text_attrs_or_children) when is_list(text_attrs_or_children) do
+    text_attrs_or_children
+    |> Enum.reduce("", fn
+      [], acc ->
+        acc
+
+      text, acc when is_binary(text) ->
+        "#{acc}#{text}"
+
+      {key, value} = _attrs, "" ->
+        ~s[#{key}="#{value}"]
+
+      {key, value} = _attrs, acc ->
+        ~s[#{acc} #{key}="#{value}"]
+
+      {tag_name, _attrs, children} = node, acc when is_binary(tag_name) and is_list(children) ->
+        ~s[#{acc}#{__MODULE__.to_string(node)}]
+    end)
+  end
+
+  def to_string({tag_name, [], children}) when is_binary(tag_name) and is_list(children) do
+    ~s(<#{tag_name}>#{__MODULE__.to_string(children)}</#{tag_name}>)
+  end
+
+  def to_string({tag_name, attrs, children})
+      when is_binary(tag_name) and is_list(attrs) and is_list(children) do
+    ~s(<#{tag_name} #{__MODULE__.to_string(attrs)}>#{__MODULE__.to_string(children)}</#{tag_name}>)
+  end
 
   @spec name_matches?(xml_node(), String.t() | Regex.t()) :: boolean()
   defp name_matches?({tag_name, _, _}, tag_name) when is_binary(tag_name), do: true
