@@ -106,6 +106,30 @@ defmodule SimpleXml.XmlNode do
     end
   end
 
+  @doc """
+  Obtains text within the body of a tag.
+
+  ## Examples
+
+      ### Obtains the text contents of a tag.
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo>bar</foo>
+      ```
+
+      iex> SimpleXml.XmlNode.text({"foo", [], ["bar"]})
+      {:ok, "bar"}
+
+      ### Generates an error when the tag contains no text
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo><bar>1</bar></foo>
+      ```
+      iex> SimpleXml.XmlNode.text({"foo", [], [{"bar", [], ["1"]}]})
+      {:error, {:text_not_found, [{"bar", [], ["1"]}]}}
+  """
   @spec text(xml_node()) :: {:ok, xml_node()} | {:error, any()}
   def text({_node, _attrs, [head | _tail]} = _xml_node) when is_binary(head), do: {:ok, head}
   def text({_node, _attrs, children} = _xml_node), do: {:error, {:text_not_found, children}}
