@@ -165,8 +165,6 @@ defmodule SimpleXml.XmlNode do
       []
   """
   @spec children(xml_node(), String.t() | Regex.t()) :: [xml_node()]
-  def children({_node, _attrs, [] = _children}, _child_name), do: {:ok, []}
-
   def children({_node, _attrs, children} = _xml_node, child_name)
       when is_list(children) and (is_binary(child_name) or is_struct(child_name)) do
     children
@@ -192,8 +190,6 @@ defmodule SimpleXml.XmlNode do
       {"ns:foo", [], [{"xs:BAR", [], ["2"]}]}
   """
   @spec drop_children(xml_node(), String.t() | Regex.t()) :: [xml_node()]
-  def drop_children({_node, _attrs, [] = _children}, _child_name), do: {:ok, []}
-
   def drop_children({node, attrs, children}, child_name)
       when is_list(children) and (is_binary(child_name) or is_struct(child_name)) do
     children
