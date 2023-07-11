@@ -5,7 +5,7 @@ defmodule SimpleXml.MixProject do
     [
       app: :simple_xml,
       version: "0.1.1",
-      elixir: "~> 1.15",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       dialyzer: dialyzer(),

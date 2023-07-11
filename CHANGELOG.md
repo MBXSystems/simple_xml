@@ -3,7 +3,7 @@
 ## v0.1.1
 
 * Add parsing and XML node access fuctionality
-
+* Reduce Elixir requirement to 1.14
 
 ## v0.1.0
 
