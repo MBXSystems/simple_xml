@@ -1,5 +1,6 @@
 # SimpleXml
 
+[![Build Status](https://github.com/MBXSystems/simple_xml/workflows/CI/badge.svg)](https://github.com/MBXSystems/simple_xml/actions)
 [![Module Version](https://img.shields.io/hexpm/v/simple_xml.svg)](https://hex.pm/packages/simple_xml)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/simple_xml/)
 [![Total Download](https://img.shields.io/hexpm/dt/simple_xml.svg)](https://hex.pm/packages/simple_xml)
