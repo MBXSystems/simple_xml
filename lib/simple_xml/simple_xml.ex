@@ -15,11 +15,17 @@ defmodule SimpleXml do
   @doc """
   Parses an XML string to return a tuple representing the XML node.
 
-  ## Example
+  ## Examples
+
+      ### Well-formed XMLs are successfully parsed
 
       iex> SimpleXml.parse(~S{<foo attr1="value1" attr2="value2">body</foo>})
       {:ok, {"foo", [{"attr1", "value1"}, {"attr2", "value2"}], ["body"]}}
 
+      ### Malformed XMLs result in an error
+
+      iex> SimpleXml.parse("<foo")
+      {:error, %Saxy.ParseError{reason: {:token, :name_start_char}, binary: "<foo", position: 4}}
   """
   @spec parse(String.t()) :: {:ok, xml_node()} | {:error, Saxy.ParseError.t()}
   def parse(data) when is_binary(data),
