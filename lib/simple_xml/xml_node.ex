@@ -60,7 +60,9 @@ defmodule SimpleXml.XmlNode do
   end
 
   @doc """
-  Obtains the first child of the given node with the given tag name.
+  Obtains the first child of the given node with the given tag name via case-insensitive match.
+
+  Use a "*:" prefix for the tag name to ignore namespace associated with the tag name.
 
   ## Examples
 
@@ -83,6 +85,26 @@ defmodule SimpleXml.XmlNode do
 
       iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}, {"bar", [], ["2"]}]}, "bar")
       {:ok, {"bar", [], ["1"]}}
+
+      ### Ignores case when matching tag name
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo><bar>1</bar><bar>2</bar></foo>
+      ```
+
+      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}, {"bar", [], ["2"]}]}, "BAR")
+      {:ok, {"bar", [], ["1"]}}
+
+      ### Wildcard ignores tag namespace
+
+      Assume that the following XML has been parsed.
+      ```
+        <ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>
+      ```
+
+      iex> SimpleXml.XmlNode.first_child({"ns:foo", [], [{"xs:bar", [], ["1"]}, {"xs:bar", [], ["2"]}]}, "*:bar")
+      {:ok, {"xs:bar", [], ["1"]}}
 
       ### Generates an error when there's no child with the given name
 
@@ -141,6 +163,9 @@ defmodule SimpleXml.XmlNode do
        when is_binary(tag_name) and is_binary(child_name) do
     String.ends_with?(tag_name, ":#{child_name}")
   end
+
+  defp name_matches?({tag_name, _, _}, name) when is_binary(tag_name) and is_binary(name),
+    do: String.downcase(tag_name) == String.downcase(name)
 
   defp name_matches?(_tag, _child_name), do: false
 end
