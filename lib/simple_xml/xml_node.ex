@@ -80,7 +80,7 @@ defmodule SimpleXml.XmlNode do
   ### Wildcard ignores tag namespace
 
       iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
-      iex> SimpleXml.XmlNode.first_child(node, "*:bar")
+      iex> SimpleXml.XmlNode.first_child(node, "*:Bar")
       {:ok, {"xs:bar", [], ["1"]}}
 
   ### Use Regex to find a child
@@ -199,7 +199,9 @@ defmodule SimpleXml.XmlNode do
 
   defp name_matches?({tag_name, _, _}, "*:" <> child_name)
        when is_binary(tag_name) and is_binary(child_name) do
-    String.ends_with?(tag_name, ":#{child_name}")
+    tag_name
+    |> String.downcase()
+    |> String.ends_with?(":#{String.downcase(child_name)}")
   end
 
   defp name_matches?({tag_name, _, _}, name) when is_binary(tag_name) and is_binary(name),
