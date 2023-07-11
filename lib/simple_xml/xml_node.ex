@@ -49,8 +49,8 @@ defmodule SimpleXml.XmlNode do
   end
 
   @doc """
-  Obtains the first child of the given node with the given string tag name via case-insensitive
-  match.
+  Obtains the first direct child of the given node with the given string tag name via
+  case-insensitive match.
 
   Use a `*:` prefix for the tag name to ignore namespace associated with the tag name.
 
@@ -94,9 +94,16 @@ defmodule SimpleXml.XmlNode do
       iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar></foo>')
       iex> SimpleXml.XmlNode.first_child(node, "baz")
       {:error, {:child_not_found, [child_name: "baz", actual_children: [{"bar", [], ["1"]}]]}}
+
+  ### Generates an error when there no children
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo></foo>')
+      iex> SimpleXml.XmlNode.first_child(node, "baz")
+      {:error, {:child_not_found, [child_name: "baz", actual_children: []]}}
   """
   @spec first_child(xml_node(), String.t() | Regex.t()) :: {:ok, xml_node()} | {:error, any()}
-  def first_child({_node, _attrs, []}, _child_name), do: {:error, :node_has_no_children}
+  def first_child({_node, _attrs, [] = children}, child_name),
+    do: {:error, {:child_not_found, [child_name: child_name, actual_children: children]}}
 
   def first_child({_node, _attrs, children} = _xml_node, child_name)
       when is_list(children) and (is_binary(child_name) or is_struct(child_name)) do
@@ -125,7 +132,7 @@ defmodule SimpleXml.XmlNode do
       iex> SimpleXml.XmlNode.text(node)
       {:error, {:text_not_found, [{"bar", [], ["1"]}]}}
   """
-  @spec text(xml_node()) :: {:ok, xml_node()} | {:error, any()}
+  @spec text(xml_node()) :: {:ok, String.t()} | {:error, any()}
   def text({_node, _attrs, [head | _tail]} = _xml_node) when is_binary(head), do: {:ok, head}
   def text({_node, _attrs, children} = _xml_node), do: {:error, {:text_not_found, children}}
 
