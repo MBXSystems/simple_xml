@@ -6,7 +6,7 @@ test:
 
 lint:
     FROM +setup-base
-    COPY config .formatter.exs
+    COPY config .formatter.exs ./
     RUN MIX_ENV=test mix deps.unlock --check-unused
     RUN MIX_ENV=test mix clean
     RUN MIX_ENV=test mix compile --warnings-as-errors
@@ -24,6 +24,6 @@ setup-base:
     COPY mix.exs mix.lock ./
     RUN MIX_ENV=test mix deps.get
     RUN MIX_ENV=test mix deps.compile
-    COPY lib test
+    COPY lib test ./
     RUN MIX_ENV=test mix compile
 
