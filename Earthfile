@@ -24,7 +24,7 @@ setup-base:
     ARG ELIXIR_BASE=1.15.2-erlang-26.0.2-ubuntu-jammy-20230126
     FROM hexpm/elixir:$ELIXIR_BASE
     RUN apt-get update
-    RUN apt-get install -y git build-base
+    RUN apt-get install -y git build-essential
     RUN mix local.rebar --force
     RUN mix local.hex --force
     ENV ELIXIR_ASSERT_TIMEOUT=10000
