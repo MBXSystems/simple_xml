@@ -7,6 +7,8 @@ defmodule SimpleXml.MixProject do
       version: "0.1.0",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
+      aliases: aliases(),
+      dialyzer: dialyzer(),
       description: description(),
       package: package(),
       deps: deps()
@@ -38,8 +40,26 @@ defmodule SimpleXml.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:saxy, "~> 1.5.0"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, "~> 1.7.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.3", only: :dev, runtime: false},
+
+      # We only use esaml for unit testing.
+      {:esaml, "~> 4.5", only: [:dev, :test]}
+    ]
+  end
+
+  defp dialyzer do
+    [
+      ignore_warnings: "config/dialyzer.ignore.exs",
+      plt_ignore_apps: [:xmerl, :esaml]
+    ]
+  end
+
+  defp aliases do
+    [
+      lint: ["format --check-formatted", "credo --strict", "dialyzer --halt-exit-status"]
     ]
   end
 end
