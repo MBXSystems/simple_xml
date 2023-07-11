@@ -27,8 +27,8 @@ jobs:
     steps:
       - uses: earthly/actions-setup@v1
       - uses: actions/checkout@v3
-      - name: ecto test under ${{matrix.elixirbase}}
-        run: earthly -P --ci --build-arg ELIXIR_BASE=${{matrix.elixirbase}} +test
+      - name: ecto test under ${{ matrix.elixirbase }}
+        run: earthly -P --ci --build-arg ELIXIR_BASE=${{ matrix.elixirbase }} +test
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -42,5 +42,19 @@ jobs:
     steps:
       - uses: earthly/actions-setup@v1
       - uses: actions/checkout@v3
-      - name: ecto lint under ${{matrix.elixirbase}}
-        run: earthly -P --ci --build-arg ELIXIR_BASE=${{matrix.elixirbase}} +lint
+      - name: ecto lint under ${{ matrix.elixirbase }}
+        run: earthly -P --ci --build-arg ELIXIR_BASE=${{ matrix.elixirbase }} +lint
+      - name: Cache PLT files
+        id: cache_plt
+        uses: actions/cache@v3
+        env:
+          cache-name: cache_plt
+        with:
+          path: |
+            /src/simple_xml/_build/test/*.plt
+            /src/simple_xml/_build/test/*.plt.hash
+          key: lint-${{ env.cache-name }}-base-${{ matrix.elixirbase }}
+          restore-keys: |
+            lint-${{ env.cache-name }}-base-${{ matrix.elixirbase }}
+            lint-${{ env.cache-name }}-base-
+            lint-${{ env.cache-name }}-
