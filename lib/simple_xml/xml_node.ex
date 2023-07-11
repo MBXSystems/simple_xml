@@ -14,33 +14,22 @@ defmodule SimpleXml.XmlNode do
 
   ## Examples
 
-      ### Obtains the value for an attribute
+  ### Obtains the value for an attribute
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo a="1" b="2"></foo>
-      ```
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo a="1" b="2"></foo>')
+      iex> SimpleXml.XmlNode.attribute(node, "a")
+      {:ok, "1"}
 
-      iex> SimpleXml.XmlNode.attribute({"foo", [{"a", 1}, "b", 2], []}, "a")
-      {:ok, 1}
+  ### Returns the first matching attribute it finds
 
-      ### Returns the first matching attribute it finds
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo a="1" a="2"></foo>')
+      iex> SimpleXml.XmlNode.attribute(node, "a")
+      {:ok, "1"}
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo a="1" a="2"></foo>
-      ```
+  ### Generates an error when the attribute is missing
 
-      iex> SimpleXml.XmlNode.attribute({"foo", [{"a", 1}, "a", 2], []}, "a")
-      {:ok, 1}
-
-      ### Generates an error when the attribute is missing
-
-      Assume that the following XML has been parsed.
-      ```
-        <foo a="1" b="2"></foo>
-      ```
-      iex> SimpleXml.XmlNode.attribute({"foo", [{"a", 1}, "b", 2], []}, "c")
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo a="1" b="2"></foo>')
+      iex> SimpleXml.XmlNode.attribute(node, "c")
       {:error, {:attribute_not_found, "c"}}
   """
   @spec attribute(xml_node(), String.t()) :: {:ok, String.t()} | {:error, any()}
@@ -63,71 +52,48 @@ defmodule SimpleXml.XmlNode do
   Obtains the first child of the given node with the given string tag name via case-insensitive
   match.
 
-  Use a "*:" prefix for the tag name to ignore namespace associated with the tag name.
+  Use a `*:` prefix for the tag name to ignore namespace associated with the tag name.
 
   Alternatively, you can supply a regex to pattern match the child name.  When Regex is supplied the
   Regex's case sensitivity is respected.
 
   ## Examples
 
-      ### Obtains the first child by the given name.
+  ### Obtains the first child by the given name
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo><bar>1</bar><baz>2</baz></foo>
-      ```
-
-      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}, {"baz", [], ["2"]}]}, "bar")
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> SimpleXml.XmlNode.first_child(node, "bar")
       {:ok, {"bar", [], ["1"]}}
 
-      ### Returns the first matching node it finds
+  ### Returns the first matching node it finds
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo><bar>1</bar><bar>2</bar></foo>
-      ```
-
-      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}, {"bar", [], ["2"]}]}, "bar")
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><bar>2</bar></foo>')
+      iex> SimpleXml.XmlNode.first_child(node, "bar")
       {:ok, {"bar", [], ["1"]}}
 
-      ### Ignores case when matching tag name
+  ### Ignores case when matching tag name
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo><bar>1</bar><bar>2</bar></foo>
-      ```
-
-      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}, {"bar", [], ["2"]}]}, "BAR")
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><bar>2</bar></foo>')
+      iex> SimpleXml.XmlNode.first_child(node, "BAR")
       {:ok, {"bar", [], ["1"]}}
 
-      ### Wildcard ignores tag namespace
+  ### Wildcard ignores tag namespace
 
-      Assume that the following XML has been parsed.
-      ```
-        <ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>
-      ```
-
-      iex> SimpleXml.XmlNode.first_child({"ns:foo", [], [{"xs:bar", [], ["1"]}, {"xs:bar", [], ["2"]}]}, "*:bar")
+      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
+      iex> SimpleXml.XmlNode.first_child(node, "*:bar")
       {:ok, {"xs:bar", [], ["1"]}}
 
-      ### Use Regex to find a child
+  ### Use Regex to find a child
 
-      Assume that the following XML has been parsed.
-      ```
-        <ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>
-      ```
-
-      iex> SimpleXml.XmlNode.first_child({"ns:foo", [], [{"xs:bar", [], ["1"]}, {"xs:bar", [], ["2"]}]}, ~r/.*:BAR/i)
+      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
+      iex> SimpleXml.XmlNode.first_child(node, ~r/.*:BAR/i)
       {:ok, {"xs:bar", [], ["1"]}}
 
-      ### Generates an error when there's no child with the given name
+  ### Generates an error when there's no child with the given name
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo><bar>1</bar></foo>
-      ```
-      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}]}, "baz")
-      {:error, {:child_not_found, "baz"}}
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar></foo>')
+      iex> SimpleXml.XmlNode.first_child(node, "baz")
+      {:error, {:child_not_found, [child_name: "baz", actual_children: [{"bar", [], ["1"]}]]}}
   """
   @spec first_child(xml_node(), String.t() | Regex.t()) :: {:ok, xml_node()} | {:error, any()}
   def first_child({_node, _attrs, []}, _child_name), do: {:error, :node_has_no_children}
@@ -137,7 +103,7 @@ defmodule SimpleXml.XmlNode do
     children
     |> Enum.find(&name_matches?(&1, child_name))
     |> case do
-      nil -> {:error, {:child_not_found, child_name}}
+      nil -> {:error, {:child_not_found, [child_name: child_name, actual_children: children]}}
       result -> {:ok, result}
     end
   end
@@ -147,23 +113,16 @@ defmodule SimpleXml.XmlNode do
 
   ## Examples
 
-      ### Obtains the text contents of a tag.
+  ### Obtains the text contents of a tag
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo>bar</foo>
-      ```
-
-      iex> SimpleXml.XmlNode.text({"foo", [], ["bar"]})
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo>bar</foo>')
+      iex> SimpleXml.XmlNode.text(node)
       {:ok, "bar"}
 
-      ### Generates an error when the tag contains no text
+  ### Generates an error when the tag contains no text
 
-      Assume that the following XML has been parsed.
-      ```
-        <foo><bar>1</bar></foo>
-      ```
-      iex> SimpleXml.XmlNode.text({"foo", [], [{"bar", [], ["1"]}]})
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar></foo>')
+      iex> SimpleXml.XmlNode.text(node)
       {:error, {:text_not_found, [{"bar", [], ["1"]}]}}
   """
   @spec text(xml_node()) :: {:ok, xml_node()} | {:error, any()}
