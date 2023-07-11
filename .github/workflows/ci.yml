@@ -14,19 +14,18 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  code_check:
-    # The type of runner that the job will run on
-    runs-on: elixir:1.15-otp-25
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    env:
+      FORCE_COLOR: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        elixirbase:
+          - "1.15.2-erlang-26.0.2"
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: earthly/actions-setup@v1
       - uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
-      - name: Run Lint
-        run: mix lint
-
-      # Runs a single command using the runners shell
-      - name: Run Unit Tests
-        run: mix test  
+      - name: ecto lint under ${{matrix.elixirbase}}
+        run: earthly -P --ci --build-arg ELIXIR_BASE=${{matrix.elixirbase}} +lint
