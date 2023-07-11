@@ -15,7 +15,7 @@ defmodule SimpleXml do
   @doc """
   Parses an XML string to return a tuple representing the XML node.
 
-  ## Examples
+  ## Example
 
       iex> SimpleXml.parse(~S{<foo attr1="value1" attr2="value2">body</foo>})
       {:ok, {"foo", [{"attr1", "value1"}, {"attr2", "value2"}], ["body"]}}

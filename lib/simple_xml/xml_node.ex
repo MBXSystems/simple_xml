@@ -7,15 +7,45 @@ defmodule SimpleXml.XmlNode do
   For simplicity, this module ignores namespaces within the document.
   """
 
-  @type xml_attribute :: {String.t(), String.t()}
-  @type xml_node :: {String.t(), [xml_attribute()], [tuple()]}
+  @type xml_node :: SimpleXml.xml_node()
 
-  @spec from_string(String.t()) :: {:ok, xml_node()} | {:error, Saxy.ParseError.t()}
-  def from_string(data) when is_binary(data),
-    do: Saxy.SimpleForm.parse_string(data)
+  @doc """
+  Obtains value for the given attribute.
 
+  ## Examples
+
+      ### Obtains the value for an attribute
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo a="1" b="2"></foo>
+      ```
+
+      iex> SimpleXml.XmlNode.attribute({"foo", [{"a", 1}, "b", 2], []}, "a")
+      {:ok, 1}
+
+      ### Returns the first matching attribute it finds
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo a="1" a="2"></foo>
+      ```
+
+      iex> SimpleXml.XmlNode.attribute({"foo", [{"a", 1}, "a", 2], []}, "a")
+      {:ok, 1}
+
+      ### Generates an error when the attribute is missing
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo a="1" b="2"></foo>
+      ```
+      iex> SimpleXml.XmlNode.attribute({"foo", [{"a", 1}, "b", 2], []}, "c")
+      {:error, {:attribute_not_found, "c"}}
+  """
   @spec attribute(xml_node(), String.t()) :: {:ok, String.t()} | {:error, any()}
-  def attribute({_node, [], _children}, _attr_name), do: {:error, :node_has_no_attributes}
+  def attribute({_node, [], _children}, attr_name),
+    do: {:error, {:attribute_not_found, attr_name}}
 
   def attribute({_node, attrs, _children}, attr_name) when is_list(attrs) do
     attrs
@@ -29,6 +59,40 @@ defmodule SimpleXml.XmlNode do
     end
   end
 
+  @doc """
+  Obtains the first child of the given node with the given tag name.
+
+  ## Examples
+
+      ### Obtains the first child by the given name.
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo><bar>1</bar><baz>2</baz></foo>
+      ```
+
+      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}, {"baz", [], ["2"]}]}, "bar")
+      {:ok, {"bar", [], ["1"]}}
+
+      ### Returns the first matching node it finds
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo><bar>1</bar><bar>2</bar></foo>
+      ```
+
+      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}, {"bar", [], ["2"]}]}, "bar")
+      {:ok, {"bar", [], ["1"]}}
+
+      ### Generates an error when there's no child with the given name
+
+      Assume that the following XML has been parsed.
+      ```
+        <foo><bar>1</bar></foo>
+      ```
+      iex> SimpleXml.XmlNode.first_child({"foo", [], [{"bar", [], ["1"]}]}, "baz")
+      {:error, {:child_not_found, "baz"}}
+  """
   @spec first_child(xml_node(), String.t()) :: {:ok, xml_node()} | {:error, any()}
   def first_child({_node, _attrs, []}, _child_name), do: {:error, :node_has_no_children}
 
