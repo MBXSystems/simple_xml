@@ -2,17 +2,15 @@ VERSION 0.5
 
 test:
     FROM +setup-base
-    COPY test ./
+    COPY test ./test
     RUN ls -al ./
-    RUN ls -al test
     RUN MIX_ENV=test mix test
 
 lint:
     FROM +setup-base
+    COPY config ./config
     COPY .formatter.exs ./
     RUN ls -al ./
-    RUN ls -al lib
-    RUN ls -al config
     RUN MIX_ENV=test mix deps.unlock --check-unused
     RUN MIX_ENV=test mix clean
     RUN MIX_ENV=test mix compile --warnings-as-errors
@@ -30,6 +28,6 @@ setup-base:
     COPY mix.exs mix.lock ./
     RUN MIX_ENV=test mix deps.get
     RUN MIX_ENV=test mix deps.compile
-    COPY lib config ./
+    COPY lib ./lib
     RUN MIX_ENV=test mix compile
 
