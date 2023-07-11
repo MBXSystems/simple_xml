@@ -116,6 +116,64 @@ defmodule SimpleXml.XmlNode do
   end
 
   @doc """
+  Returns the children of the given node.  To get a filtered list of children, see `children/2`.
+
+  ## Examples
+
+  ### Returns all children
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> SimpleXml.XmlNode.children(node)
+      {:ok, [{"bar", [], ["1"]}, {"baz", [], ["2"]}]}
+
+  ### Returns an error if the node doesn't contain a child
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo>bar</foo>')
+      iex> SimpleXml.XmlNode.children(node)
+      {:error, {:no_children_found, ["bar"]}}
+
+  """
+  @spec children(xml_node()) :: {:ok, [String.t() | xml_node()]}
+  def children({_node, _attrs, [head | _tail] = children}) when is_binary(head),
+    do: {:error, {:no_children_found, children}}
+
+  def children({_node, _attrs, children}) when is_list(children), do: {:ok, children}
+
+  @doc """
+  Returns all children that match the given child_name filter.  Filtering matches that of
+  `first_child/2`.  A string child tag name or a regex can be supplied for filtering.
+
+  ## Examples
+
+  ### Returns all children by a given string name
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> SimpleXml.XmlNode.children(node, "bar")
+      [{"bar", [], ["1"]}]
+
+
+  ### Returns all children by a given Regex
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo><bar>1</bar><baz>2</baz></foo>')
+      iex> SimpleXml.XmlNode.children(node, ~r/BA/i)
+      [{"bar", [], ["1"]}, {"baz", [], ["2"]}]
+
+  ### Returns an empty list, if there are no children
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<foo>bar</foo>')
+      iex> SimpleXml.XmlNode.children(node, "bar")
+      []
+  """
+  @spec children(xml_node(), String.t() | Regex.t()) :: [xml_node()]
+  def children({_node, _attrs, [] = _children}, _child_name), do: {:ok, []}
+
+  def children({_node, _attrs, children} = _xml_node, child_name)
+      when is_list(children) and (is_binary(child_name) or is_struct(child_name)) do
+    children
+    |> Enum.filter(&name_matches?(&1, child_name))
+  end
+
+  @doc """
   Obtains text within the body of a tag.
 
   ## Examples
