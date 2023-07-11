@@ -3,7 +3,7 @@
 ## v0.1.3
 
 * Fixed error message for `XmlNode.first_child/2`
-* Added `children/1` and `children/2` functions to XmlNode
+* Added `children/1`, `children/2`, `drop_children/1` functions to XmlNode
 
 ## v0.1.2
 

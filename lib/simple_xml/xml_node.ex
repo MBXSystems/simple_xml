@@ -174,6 +174,34 @@ defmodule SimpleXml.XmlNode do
   end
 
   @doc """
+  Removes all children that match the given name.  Semantics of the child_name parameter follow
+  those of the `first_child/1` function.
+
+  ## Exmaples
+
+  ### All matching children are removed based on a string child name
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:bar>2</xs:bar></ns:foo>')
+      iex> SimpleXml.XmlNode.drop_children(node, "*:Bar")
+      {"ns:foo", [], []}
+
+  ### All matching children are removed based on a Regex child name
+
+      iex> {:ok, node} = SimpleXml.parse(~s'<ns:foo><xs:bar>1</xs:bar><xs:BAR>2</xs:BAR></ns:foo>')
+      iex> SimpleXml.XmlNode.drop_children(node, ~r/bar/)
+      {"ns:foo", [], [{"xs:BAR", [], ["2"]}]}
+  """
+  @spec drop_children(xml_node(), String.t() | Regex.t()) :: [xml_node()]
+  def drop_children({_node, _attrs, [] = _children}, _child_name), do: {:ok, []}
+
+  def drop_children({node, attrs, children}, child_name)
+      when is_list(children) and (is_binary(child_name) or is_struct(child_name)) do
+    children
+    |> Enum.reject(&name_matches?(&1, child_name))
+    |> then(&{node, attrs, &1})
+  end
+
+  @doc """
   Obtains text within the body of a tag.
 
   ## Examples
