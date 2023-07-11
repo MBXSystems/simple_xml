@@ -13,19 +13,6 @@ defmodule SimpleXml do
   @type xml_node :: {String.t(), [xml_attribute()], [tuple()]}
 
   @doc """
-  Parse
-
-  ## Examples
-
-      iex> SimpleXml.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
-
-  @doc """
   Parses an XML string to return a tuple representing the XML node.
 
   ## Examples
