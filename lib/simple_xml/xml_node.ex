@@ -385,7 +385,7 @@ defmodule SimpleXml.XmlNode do
       iex> output == xmerl_output
       true
 
-  ### Parent unused named namespaces is given precedence to child's named namespace declaration
+  ### Parent unused named namespace is given precedence to child's named namespace declaration
 
       iex> alias SimpleXml.XmlNode
       iex> input = ~S'<foo xmlns:a="a"><a:bar xmlns:a="b">1</a:bar><a:bar>2</a:bar></foo>'
