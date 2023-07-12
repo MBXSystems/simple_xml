@@ -277,6 +277,281 @@ defmodule SimpleXml.XmlNode do
     ~s(<#{tag_name} #{__MODULE__.to_string(attrs)}>#{__MODULE__.to_string(children)}</#{tag_name}>)
   end
 
+  @doc """
+  This function attempts to mimic the :xmerl_c14n.c14n() functionality by:
+    * placing namespace attributes first
+    * sorting attributes alphabetically
+    * only applying namespaces attributes to nodes where they're first used
+    * unused named namespace attributes are applied to descendants where they're first used
+
+
+  ## Examples
+
+  ### Nodes with no attributes are unaffected
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo><bar>1</bar><bar>2</bar></foo>'
+      iex> expected_output = ~S'<foo><bar>1</bar><bar>2</bar></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+
+  ### Attributes are sorted alphabetically, with namespaces appearing first
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns="a" a="1" B="2"><bar xmlns="b" b="1" a="2">1</bar><bar xmlns="c">2</bar></foo>'
+      iex> expected_output = ~S'<foo xmlns="a" B="2" a="1"><bar xmlns="b" a="2" b="1">1</bar><bar xmlns="c">2</bar></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+
+  ### Unused named namespaces are dropped
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns:a="a"></foo>'
+      iex> expected_output = ~S'<foo></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+
+  ### Default namespaces are kept
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns="a"></foo>'
+      iex> expected_output = ~S'<foo xmlns="a"></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+
+  ### Parent named namespace is preserved when it's used by the parent
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<a:foo xmlns:a="a"><a:bar>1</a:bar></a:foo>'
+      iex> expected_output = ~S'<a:foo xmlns:a="a"><a:bar>1</a:bar></a:foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+
+  ### Child named namespace is dropped when the parent declares and uses the same namespace
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<a:foo xmlns:a="a"><a:bar xmlns:a="B">1</a:bar></a:foo>'
+      iex> expected_output = ~S'<a:foo xmlns:a="a"><a:bar>1</a:bar></a:foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+
+  ### Parent unused named namespaces are applied to namespaced children, but not namespaced grandchildren
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns:a="a"><a:bar>1</a:bar><a:bar><a:baz>2</a:baz></a:bar></foo>'
+      iex> expected_output = ~S'<foo><a:bar xmlns:a="a">1</a:bar><a:bar xmlns:a="a"><a:baz>2</a:baz></a:bar></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+
+  ### Parent unused named namespaces is given precedence to child's named namespace declaration
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns:a="a"><a:bar xmlns:a="b">1</a:bar><a:bar>2</a:bar></foo>'
+      iex> expected_output = ~S'<foo><a:bar xmlns:a="a">1</a:bar><a:bar xmlns:a="a">2</a:bar></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output == expected_output
+      true
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output == xmerl_output
+      true
+  """
+  @spec canonicalize(xml_node() | [xml_node()] | String.t(), keyword()) ::
+          xml_node() | [xml_node()]
+  def canonicalize(node, opts \\ [])
+
+  def canonicalize(text, _opts) when is_binary(text), do: text
+
+  def canonicalize(nodes, opts) when is_list(nodes) and is_list(opts),
+    do: nodes |> Enum.map(&canonicalize(&1, opts))
+
+  def canonicalize({tag_name, attrs, children} = _node, opts)
+      when is_binary(tag_name) and is_list(attrs) do
+    used_namespaces = Keyword.get(opts, :used_namespaces, %{})
+    unused_namespaces = Keyword.get(opts, :unused_namespaces, %{})
+
+    tag_name
+    |> get_tag_namespace()
+    |> case do
+      :no_tag_namespace ->
+        {attrs, used_namespaces, unused_namespaces} =
+          attrs
+          |> Enum.reduce({[], used_namespaces, unused_namespaces}, fn
+            # Keep default namespace declarations
+            {"xmlns", _uri} = attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
+              {[attr | acc_attrs], acc_used_namespaces, acc_unused_namespaces}
+
+            # Drop named namespace for this node and add it to the map of unused namespaces
+            {"xmlns:" <> name, uri} = _attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
+              {acc_attrs, acc_used_namespaces, Map.put_new(acc_unused_namespaces, name, uri)}
+
+            # Keep all other attributes
+            {_key, _value} = attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
+              {[attr | acc_attrs], acc_used_namespaces, acc_unused_namespaces}
+          end)
+
+        attrs
+        |> unique_attributes()
+        |> sort_attributes()
+        |> then(
+          &{tag_name, &1,
+           canonicalize(children,
+             used_namespaces: used_namespaces,
+             unused_namespaces: unused_namespaces
+           )}
+        )
+
+      namespace when is_binary(namespace) ->
+        attrs = maybe_add_namespace_attribute(attrs, namespace, unused_namespaces)
+
+        {attrs, used_namespaces, unused_namespaces} =
+          attrs
+          |> Enum.reduce({[], used_namespaces, unused_namespaces}, fn
+            # Keep default namespace declarations
+            {"xmlns", _uri} = attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
+              {[attr | acc_attrs] |> Enum.reverse(), acc_used_namespaces, acc_unused_namespaces}
+
+            # Drop named namespace when it's already been used
+            {"xmlns:" <> ^namespace, _uri} = _attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
+            when is_map_key(used_namespaces, namespace) ->
+              {acc_attrs, acc_used_namespaces, Map.drop(acc_unused_namespaces, [namespace])}
+
+            # Keep named namespace attr for this node, if it hasn't been used by an ancestor
+            # Also, remove it from the list of unused
+            {"xmlns:" <> ^namespace, uri} = attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
+            when not is_map_key(used_namespaces, namespace) ->
+              {[attr | acc_attrs] |> Enum.reverse(),
+               Map.put_new(acc_used_namespaces, namespace, uri),
+               Map.drop(acc_unused_namespaces, [namespace])}
+
+            # Drop named namespace that don't match the current node's namespace and
+            # add it to the map of unused namespaces
+            {"xmlns:" <> name, uri} = _attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
+            when is_binary(name) and name != namespace ->
+              {acc_attrs, acc_used_namespaces, Map.put_new(acc_unused_namespaces, name, uri)}
+
+            # Keep all other attributes
+            {_key, _value} = attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
+              {[attr | acc_attrs] |> Enum.reverse(), acc_used_namespaces, acc_unused_namespaces}
+          end)
+
+        attrs
+        |> unique_attributes()
+        |> sort_attributes()
+        |> then(
+          &{tag_name, &1,
+           canonicalize(
+             children,
+             used_namespaces: used_namespaces,
+             unused_namespaces: unused_namespaces
+           )}
+        )
+    end
+  end
+
+  defp maybe_add_namespace_attribute(
+         attrs,
+         namespace,
+         %{} = unused_namespaces
+       )
+       when is_list(attrs) and
+              is_binary(namespace) and
+              is_map_key(unused_namespaces, namespace) do
+    [{"xmlns:#{namespace}", Map.get(unused_namespaces, namespace)} | attrs]
+  end
+
+  defp maybe_add_namespace_attribute(attrs, _namespace, _unused_namespaces), do: attrs
+
+  defp unique_attributes(attrs) when is_list(attrs) do
+    attrs
+    |> Enum.reduce(%{}, fn {key, value}, %{} = acc ->
+      Map.put_new(acc, key, value)
+    end)
+    |> Map.to_list()
+  end
+
+  defp sort_attributes(attrs) when is_list(attrs) do
+    namespace_attrs =
+      attrs
+      |> Enum.filter(&is_namespace_attribute?(elem(&1, 0)))
+      |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
+
+    attrs =
+      attrs
+      |> Enum.reject(&is_namespace_attribute?(elem(&1, 0)))
+      |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
+
+    namespace_attrs ++ attrs
+  end
+
+  defp is_namespace_attribute?("xmlns"), do: true
+  defp is_namespace_attribute?("xmlns:" <> _namespace), do: true
+  defp is_namespace_attribute?(_), do: false
+
+  @spec get_tag_namespace(String.t()) :: atom() | String.t()
+  defp get_tag_namespace(tag_name) when is_binary(tag_name) do
+    tag_name
+    |> String.split(":")
+    |> case do
+      [^tag_name] ->
+        :no_tag_namespace
+
+      [namespace, _tag] ->
+        namespace
+    end
+  end
+
   @spec name_matches?(xml_node(), String.t() | Regex.t()) :: boolean()
   defp name_matches?({tag_name, _, _}, tag_name) when is_binary(tag_name), do: true
 
