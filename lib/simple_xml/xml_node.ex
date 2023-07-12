@@ -245,7 +245,7 @@ defmodule SimpleXml.XmlNode do
       iex> SimpleXml.XmlNode.to_string(node) == input
       true
   """
-  @spec to_string(String.t() | xml_node() | [xml_node()] | [xml_attribute()]) :: String.t()
+  @spec to_string(xml_node() | [xml_node()] | [xml_attribute()] | String.t()) :: String.t()
   def to_string(text) when is_binary(text), do: text
 
   def to_string(text_attrs_or_children) when is_list(text_attrs_or_children) do
@@ -278,12 +278,13 @@ defmodule SimpleXml.XmlNode do
   end
 
   @doc """
-  This function attempts to mimic the :xmerl_c14n.c14n() functionality by:
+  This function attempts to mimic the `:xmerl_c14n.c14n()` functionality by:
     * placing namespace attributes first
     * sorting attributes alphabetically
     * only applying namespaces attributes to nodes where they're first used
     * unused named namespace attributes are applied to descendants where they're first used
 
+  Ultimately, `:xmerl_c14n.c14n()` is an implementation of [this W3C spec](http://www.w3.org/2001/10/xml-exc-c14n).
 
   ## Examples
 
