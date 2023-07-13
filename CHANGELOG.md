@@ -1,5 +1,9 @@
 # Changelog for simple_xml v0.1
 
+## v1.0.1
+
+* Minor documentation fix
+
 ## v1.0.0
 
 * Fix error message for `XmlNode.first_child/2`
