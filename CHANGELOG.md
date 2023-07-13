@@ -1,10 +1,11 @@
 # Changelog for simple_xml v0.1
 
-## v0.1.3
+## v1.0.0
 
 * Fix error message for `XmlNode.first_child/2`
 * Add `children/1`, `children/2`, `drop_children/1`, `to_string/1` functions to XmlNode
 * Add ability to canonicalize XmlNode that matches `:xmerl_c14n.c14n()`
+* Add `SimpleXml.verify/2` for signature verification
 
 ## v0.1.2
 

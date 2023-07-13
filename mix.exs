@@ -41,6 +41,7 @@ defmodule SimpleXml.MixProject do
   defp deps do
     [
       {:saxy, "~> 1.5.0"},
+      {:x509, "~> 0.8.7"},
       {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
       {:credo, "~> 1.7.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.3", only: [:dev, :test], runtime: false},
