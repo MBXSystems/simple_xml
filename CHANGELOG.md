@@ -1,4 +1,4 @@
-# Changelog for simple_xml v0.1
+# Changelog for simple_xml
 
 ## v1.0.1
 
