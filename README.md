@@ -70,11 +70,9 @@ All code changes should be accompanied with unit tests.
 
 ## License
 
-Copyright (c) 2023, AHEAD Inc.
-
 MIT License
 
-Copyright (c) 2023 MBX Systems
+Copyright (c) 2023 AHEAD, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
