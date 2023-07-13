@@ -41,7 +41,7 @@ The package can be installed, via [Hex](https://hex.pm/packages/simple_xml), by 
 ```elixir
 def deps do
   [
-    {:simple_xml, "~> 0.1.0"}
+    {:simple_xml, "~> 1.0.0"}
   ]
 end
 ```
