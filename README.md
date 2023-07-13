@@ -11,6 +11,29 @@ A simplified Elixir string-based XML processor that avoids the atom exhaustion v
 
 This library adds some basic operations for traversing the XML document and obtaining attributes and text values.
 
+## Usage
+
+### Parsing
+
+Parsing is as straightforward as invoking the following command:
+
+```elixir
+> SimpleXml.parse(~S{<foo a="1">bar</foo>})
+{:ok, {"foo", [{"a", "1"}], ["bar"]}}
+```
+
+See `SimpleXml.parse/1` for details.
+
+### Digest and Signature Verification
+
+XML digests and signatures can be verified via the following function.
+
+```elixir
+> SimpleXml.verify(root, public_key)
+```
+
+We leave it up to the caller to provide the public key against which verify the signature.  Please see `SimpleXml.verify/2` documentation for detailed examples.
+
 ## Installation
 
 The package can be installed, via [Hex](https://hex.pm/packages/simple_xml), by adding `simple_xml` to your list of dependencies in `mix.exs`:
@@ -23,23 +46,50 @@ def deps do
 end
 ```
 
-## Parsing
+## Contributing
 
-Parsing is as straightforward as invoking the following command:
+We welcome merge requests for fixing issues or expanding functionality.
 
-```elixir
-> SimpleXml.parse(~S{<foo a="1">bar</foo>})
-{:ok, {"foo", [{"a", "1"}], ["bar"]}}
+Clone and compile with:
+
+```shell
+git clone https://github.com/MBXSystems/simple_xml.git
+cd simple_xml
+mix deps.get
+mix compile
 ```
 
-See `SimpleXml.parse/1` for details.
+Verify that tests and linting pass with your changes.
 
-## Digest and Signature Verification
-
-XML digests and signatures can be verified via the following function.
-
-```elixir
-> SimpleXml.verify(root, public_key)
+```shell
+mix test
+mix lint
 ```
 
-We leave it up to the caller to provide the public key against which verify the signature.  Please see `SimpleXml.verify/2` documentation for detailed examples.
+All code changes should be accompanied with unit tests.
+
+## License
+
+Copyright (c) 2023, AHEAD Inc.
+
+MIT License
+
+Copyright (c) 2023 MBX Systems
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
