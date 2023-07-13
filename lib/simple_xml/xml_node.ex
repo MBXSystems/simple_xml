@@ -295,12 +295,12 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<foo><bar>1</bar><bar>2</bar></foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      iex> output
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
 
   ### Attributes are sorted alphabetically, with namespaces appearing first
 
@@ -309,12 +309,12 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<foo xmlns="a" B="2" a="1"><bar xmlns="b" a="2" b="1">1</bar><bar xmlns="c">2</bar></foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      iex> output
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
 
   ### Unused named namespaces are dropped
 
@@ -323,12 +323,12 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<foo></foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      iex> output
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
 
   ### Default namespaces are kept
 
@@ -337,12 +337,12 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<foo xmlns="a"></foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      iex> output
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
 
   ### Parent named namespace is preserved when it's used by the parent
 
@@ -351,12 +351,12 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<a:foo xmlns:a="a"><a:bar>1</a:bar></a:foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      iex> output
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
 
   ### Child named namespace is dropped when the parent declares and uses the same namespace
 
@@ -365,12 +365,12 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<a:foo xmlns:a="a"><a:bar>1</a:bar></a:foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      iex> output
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
 
   ### Parent unused named namespaces are applied to namespaced children, but not namespaced grandchildren
 
@@ -379,12 +379,12 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<foo><a:bar xmlns:a="a">1</a:bar><a:bar xmlns:a="a"><a:baz>2</a:baz></a:bar></foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      iex> output
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
 
   ### Parent unused named namespace is given precedence to child's named namespace declaration
 
@@ -393,12 +393,11 @@ defmodule SimpleXml.XmlNode do
       iex> expected_output = ~S'<foo><a:bar xmlns:a="a">1</a:bar><a:bar xmlns:a="a">2</a:bar></foo>'
       iex> {:ok, root} = SimpleXml.parse(input)
       iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
-      iex> output == expected_output
-      true
+      expected_output
       iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
-      iex> output == xmerl_output
-      true
+      iex> output
+      xmerl_output
   """
   @spec canonicalize(xml_node() | [xml_node()] | String.t(), keyword()) ::
           xml_node() | [xml_node()]
@@ -501,6 +500,91 @@ defmodule SimpleXml.XmlNode do
     end
   end
 
+  @doc """
+  Obtains any namespace declaration attribute associated with the given node.
+
+  ## Examples
+
+  ### Returns the default namespace, if it's applicable
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns="a"></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> XmlNode.namespace_attribute(root)
+      {:ok, {"xmlns", "a"}}
+
+  ### Returns the named namespace, if it's applicable
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<a:foo xmlns:a="b"></a:foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> XmlNode.namespace_attribute(root)
+      {:ok, {"xmlns:a", "b"}}
+
+  ### Returns an error if there's no namespace
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> XmlNode.namespace_attribute(root)
+      {:error, :namesapce_attribute_not_found}
+
+  ### Returns an error if there's no applicable namespace
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns:a="a"></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> XmlNode.namespace_attribute(root)
+      {:error, :namesapce_attribute_not_found}
+  """
+  @spec namespace_attribute(xml_node()) :: {:ok, xml_attribute()} | {:error, any()}
+  def namespace_attribute({tag_name, attrs, _children}) do
+    tag_name
+    |> get_tag_namespace()
+    |> case do
+      :no_tag_namespace ->
+        attrs
+        |> Enum.find(&(elem(&1, 0) == "xmlns"))
+
+      namespace when is_binary(namespace) ->
+        attrs
+        |> Enum.find(&(elem(&1, 0) == "xmlns:#{namespace}"))
+    end
+    |> case do
+      nil ->
+        {:error, :namesapce_attribute_not_found}
+
+      {namespace, uri} when is_binary(namespace) and is_binary(uri) ->
+        {:ok, {namespace, uri}}
+    end
+  end
+
+  @doc """
+  Returns true if the given attribute name is one that's reserved for namespaces; false otherwise.
+
+  ## Examples
+
+  ### Returns true for `xmlns`
+
+      iex> SimpleXml.XmlNode.is_namespace_attribute?("xmlns")
+      true
+
+  ### Returns true for `xmlns:*`
+
+      iex> SimpleXml.XmlNode.is_namespace_attribute?("xmlns:a")
+      true
+
+  ### Returns false for non-namespace attributes
+
+      iex> SimpleXml.XmlNode.is_namespace_attribute?("foo")
+      false
+  """
+  @spec is_namespace_attribute?(String.t()) :: boolean()
+  def is_namespace_attribute?("xmlns"), do: true
+  def is_namespace_attribute?("xmlns:" <> _namespace), do: true
+  def is_namespace_attribute?(_), do: false
+
+  @spec maybe_add_namespace_attribute([xml_attribute()], String.t(), map()) :: [xml_attribute()]
   defp maybe_add_namespace_attribute(
          attrs,
          namespace,
@@ -514,6 +598,7 @@ defmodule SimpleXml.XmlNode do
 
   defp maybe_add_namespace_attribute(attrs, _namespace, _unused_namespaces), do: attrs
 
+  @spec unique_attributes([xml_attribute()]) :: [xml_attribute()]
   defp unique_attributes(attrs) when is_list(attrs) do
     attrs
     |> Enum.reduce(%{}, fn {key, value}, %{} = acc ->
@@ -522,6 +607,7 @@ defmodule SimpleXml.XmlNode do
     |> Map.to_list()
   end
 
+  @spec sort_attributes([xml_attribute()]) :: [xml_attribute()]
   defp sort_attributes(attrs) when is_list(attrs) do
     namespace_attrs =
       attrs
@@ -535,10 +621,6 @@ defmodule SimpleXml.XmlNode do
 
     namespace_attrs ++ attrs
   end
-
-  defp is_namespace_attribute?("xmlns"), do: true
-  defp is_namespace_attribute?("xmlns:" <> _namespace), do: true
-  defp is_namespace_attribute?(_), do: false
 
   @spec get_tag_namespace(String.t()) :: atom() | String.t()
   defp get_tag_namespace(tag_name) when is_binary(tag_name) do
