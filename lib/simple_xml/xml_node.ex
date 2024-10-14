@@ -656,23 +656,23 @@ defmodule SimpleXml.XmlNode do
 
   ### Returns true for `xmlns`
 
-      iex> SimpleXml.XmlNode.is_namespace_attribute?("xmlns")
+      iex> SimpleXml.XmlNode.namespace_attribute?("xmlns")
       true
 
   ### Returns true for `xmlns:*`
 
-      iex> SimpleXml.XmlNode.is_namespace_attribute?("xmlns:a")
+      iex> SimpleXml.XmlNode.namespace_attribute?("xmlns:a")
       true
 
   ### Returns false for non-namespace attributes
 
-      iex> SimpleXml.XmlNode.is_namespace_attribute?("foo")
+      iex> SimpleXml.XmlNode.namespace_attribute?("foo")
       false
   """
-  @spec is_namespace_attribute?(String.t()) :: boolean()
-  def is_namespace_attribute?("xmlns"), do: true
-  def is_namespace_attribute?("xmlns:" <> _namespace), do: true
-  def is_namespace_attribute?(_), do: false
+  @spec namespace_attribute?(String.t()) :: boolean()
+  def namespace_attribute?("xmlns"), do: true
+  def namespace_attribute?("xmlns:" <> _namespace), do: true
+  def namespace_attribute?(_), do: false
 
   @spec maybe_add_namespace_attribute([xml_attribute()], String.t(), map()) :: [xml_attribute()]
   defp maybe_add_namespace_attribute(
@@ -701,12 +701,12 @@ defmodule SimpleXml.XmlNode do
   defp sort_attributes(attrs) when is_list(attrs) do
     namespace_attrs =
       attrs
-      |> Enum.filter(&is_namespace_attribute?(elem(&1, 0)))
+      |> Enum.filter(&namespace_attribute?(elem(&1, 0)))
       |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
 
     attrs =
       attrs
-      |> Enum.reject(&is_namespace_attribute?(elem(&1, 0)))
+      |> Enum.reject(&namespace_attribute?(elem(&1, 0)))
       |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
 
     namespace_attrs ++ attrs
