@@ -9,6 +9,7 @@ defmodule SimpleXml.XmlNode do
 
   @type xml_attribute :: SimpleXml.xml_attribute()
   @type xml_node :: SimpleXml.xml_node()
+  @type attributes_reduction :: {[SimpleXml.xml_attribute()], map(), map()}
 
   @doc """
   Obtains value for the given attribute.
@@ -398,6 +399,76 @@ defmodule SimpleXml.XmlNode do
       iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
       iex> output
       xmerl_output
+
+  ### Attribute namespaces are preserved
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns:a="a" a:type="apple"><bar>1</bar></foo>'
+      iex> expected_output = ~S'<foo xmlns:a="a" a:type="apple"><bar>1</bar></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output
+      expected_output
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output
+      xmerl_output
+
+  ### Attribute namespaces within namespaced nodes are preserved
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<a:foo xmlns:a="a" xmlns:b="b" b:type="apple"><bar>1</bar></a:foo>'
+      iex> expected_output = ~S'<a:foo xmlns:a="a" xmlns:b="b" b:type="apple"><bar>1</bar></a:foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output
+      expected_output
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output
+      xmerl_output
+
+  ### Unused attribute namespaces in the parent are applied to child nodes
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<foo xmlns:a="a"><bar a:type="apple">1</bar></foo>'
+      iex> expected_output = ~S'<foo><bar xmlns:a="a" a:type="apple">1</bar></foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output
+      expected_output
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output
+      xmerl_output
+
+  ### Unused attribute namespaces in the namespaced parent are applied to child nodes
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<a:foo xmlns:a="a" xmlns:b="b"><bar b:type="apple">1</bar></a:foo>'
+      iex> expected_output = ~S'<a:foo xmlns:a="a"><bar xmlns:b="b" b:type="apple">1</bar></a:foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output
+      expected_output
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output
+      xmerl_output
+
+  ### Unused attribute namespaces in the namespaced parent are applied to child nodes, but not grandchildren
+
+      iex> alias SimpleXml.XmlNode
+      iex> input = ~S'<a:foo xmlns:a="a" xmlns:b="b"><bar b:type="apple"><baz b:type="food">2</baz></bar></a:foo>'
+      iex> expected_output = ~S'<a:foo xmlns:a="a"><bar xmlns:b="b" b:type="apple"><baz b:type="food">2</baz></bar></a:foo>'
+      iex> {:ok, root} = SimpleXml.parse(input)
+      iex> output = XmlNode.canonicalize(root) |> XmlNode.to_string()
+      iex> output
+      expected_output
+      iex> {doc, _} = input |> :binary.bin_to_list() |> :xmerl_scan.string()
+      iex> xmerl_output = doc |> :xmerl_c14n.c14n() |> to_string()
+      iex> output
+      xmerl_output
   """
   @spec canonicalize(xml_node() | [xml_node()] | String.t(), keyword()) ::
           xml_node() | [xml_node()]
@@ -412,28 +483,39 @@ defmodule SimpleXml.XmlNode do
       when is_binary(tag_name) and is_list(attrs) do
     used_namespaces = Keyword.get(opts, :used_namespaces, %{})
     unused_namespaces = Keyword.get(opts, :unused_namespaces, %{})
+    attrs_namespaces = get_attr_namespaces(attrs)
 
     tag_name
-    |> get_tag_namespace()
+    |> get_namespace()
     |> case do
-      :no_tag_namespace ->
+      :no_namespace ->
         {attrs, used_namespaces, unused_namespaces} =
           attrs
-          |> Enum.reduce({[], used_namespaces, unused_namespaces}, fn
+          |> Enum.reduce({[], %{} = used_namespaces, %{} = unused_namespaces}, fn
             # Keep default namespace declarations
             {"xmlns", _uri} = attr,
             {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
-              {[attr | acc_attrs], acc_used_namespaces, acc_unused_namespaces}
+              {acc_attrs ++ [attr], acc_used_namespaces, acc_unused_namespaces}
 
-            # Drop named namespace for this node and add it to the map of unused namespaces
-            {"xmlns:" <> name, uri} = _attr,
-            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
-              {acc_attrs, acc_used_namespaces, Map.put_new(acc_unused_namespaces, name, uri)}
+            # Keep named namespace for this node, if it's used by the attributes.
+            {"xmlns:" <> namespace, uri} = attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
+            when is_map_key(attrs_namespaces, namespace) ->
+              {
+                acc_attrs ++ [attr],
+                Map.put_new(acc_used_namespaces, namespace, uri),
+                acc_unused_namespaces
+              }
 
-            # Keep all other attributes
-            {_key, _value} = attr,
-            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
-              {[attr | acc_attrs], acc_used_namespaces, acc_unused_namespaces}
+            # Drop named namespace for this node, if it's not used by the attributes
+            # and add it to the map of unused namespaces
+            {"xmlns:" <> namespace, uri} = _attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
+            when not is_map_key(attrs_namespaces, namespace) ->
+              {acc_attrs, acc_used_namespaces, Map.put_new(acc_unused_namespaces, namespace, uri)}
+
+            {_key, _value} = attr, {_attrs, _used_namespaces, _unused_namespaces} = acc ->
+              reduce_non_namespace_attribute(attr, acc)
           end)
 
         attrs
@@ -456,7 +538,7 @@ defmodule SimpleXml.XmlNode do
             # Keep default namespace declarations
             {"xmlns", _uri} = attr,
             {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
-              {[attr | acc_attrs] |> Enum.reverse(), acc_used_namespaces, acc_unused_namespaces}
+              {acc_attrs ++ [attr], acc_used_namespaces, acc_unused_namespaces}
 
             # Drop named namespace when it's already been used
             {"xmlns:" <> ^namespace, _uri} = _attr,
@@ -469,21 +551,29 @@ defmodule SimpleXml.XmlNode do
             {"xmlns:" <> ^namespace, uri} = attr,
             {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
             when not is_map_key(used_namespaces, namespace) ->
-              {[attr | acc_attrs] |> Enum.reverse(),
-               Map.put_new(acc_used_namespaces, namespace, uri),
+              {acc_attrs ++ [attr], Map.put_new(acc_used_namespaces, namespace, uri),
                Map.drop(acc_unused_namespaces, [namespace])}
 
-            # Drop named namespace that don't match the current node's namespace and
-            # add it to the map of unused namespaces
+            # Keep named namespace for this node, if it's used by the attributes
+            # and add it to the map of used namespaces and remove from unused namespaces.
+            {"xmlns:" <> name, uri} = attr,
+            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
+            when is_binary(name) and name != namespace and
+                   is_map_key(attrs_namespaces, name) ->
+              {acc_attrs ++ [attr], Map.put_new(acc_used_namespaces, name, uri),
+               Map.drop(acc_unused_namespaces, [name])}
+
+            # Drop named namespace for this node, if it's not used by the attributes
+            # and add it to the map of unused namespaces
             {"xmlns:" <> name, uri} = _attr,
             {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc
-            when is_binary(name) and name != namespace ->
+            when is_binary(name) and name != namespace and
+                   not is_map_key(attrs_namespaces, namespace) ->
               {acc_attrs, acc_used_namespaces, Map.put_new(acc_unused_namespaces, name, uri)}
 
             # Keep all other attributes
-            {_key, _value} = attr,
-            {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces} = _acc ->
-              {[attr | acc_attrs] |> Enum.reverse(), acc_used_namespaces, acc_unused_namespaces}
+            {_key, _value} = attr, {_attrs, _used_namespaces, _unused_namespaces} = acc ->
+              reduce_non_namespace_attribute(attr, acc)
           end)
 
         attrs
@@ -540,9 +630,9 @@ defmodule SimpleXml.XmlNode do
   @spec namespace_attribute(xml_node()) :: {:ok, xml_attribute()} | {:error, any()}
   def namespace_attribute({tag_name, attrs, _children}) do
     tag_name
-    |> get_tag_namespace()
+    |> get_namespace()
     |> case do
-      :no_tag_namespace ->
+      :no_namespace ->
         attrs
         |> Enum.find(&(elem(&1, 0) == "xmlns"))
 
@@ -622,15 +712,15 @@ defmodule SimpleXml.XmlNode do
     namespace_attrs ++ attrs
   end
 
-  @spec get_tag_namespace(String.t()) :: atom() | String.t()
-  defp get_tag_namespace(tag_name) when is_binary(tag_name) do
-    tag_name
+  @spec get_namespace(String.t()) :: atom() | String.t()
+  defp get_namespace(name) when is_binary(name) do
+    name
     |> String.split(":")
     |> case do
-      [^tag_name] ->
-        :no_tag_namespace
+      [^name] ->
+        :no_namespace
 
-      [namespace, _tag] ->
+      [namespace, _name] ->
         namespace
     end
   end
@@ -652,4 +742,50 @@ defmodule SimpleXml.XmlNode do
     do: Regex.match?(name, tag_name)
 
   defp name_matches?(_tag, _child_name), do: false
+
+  @spec get_attr_namespaces([SimpleXml.xml_attribute()]) :: map()
+  defp get_attr_namespaces(attrs) when is_list(attrs) do
+    attrs
+    |> Enum.reduce(%{}, fn
+      {key, value}, %{} = acc when is_binary(key) and is_binary(value) ->
+        key
+        |> String.split(":")
+        |> case do
+          [attr_namespace, attr_name] when is_binary(attr_namespace) and is_binary(attr_name) ->
+            Map.put(acc, attr_namespace, true)
+
+          _key ->
+            acc
+        end
+
+      _, %{} = acc ->
+        acc
+    end)
+  end
+
+  @spec reduce_non_namespace_attribute(SimpleXml.xml_attribute(), attributes_reduction()) ::
+          attributes_reduction()
+  defp reduce_non_namespace_attribute(
+         {key, _value} = attr,
+         {acc_attrs, %{} = acc_used_namespaces, %{} = acc_unused_namespaces}
+       )
+       when is_binary(key) and is_list(acc_attrs) do
+    key
+    |> get_namespace()
+    |> case do
+      # Namespaced attr for an unused namespace
+      namespace when is_binary(namespace) and is_map_key(acc_unused_namespaces, namespace) ->
+        uri = Map.get(acc_unused_namespaces, namespace)
+
+        {
+          [{"xmlns:#{namespace}", uri} | acc_attrs] ++ [attr],
+          Map.put_new(acc_used_namespaces, namespace, uri),
+          Map.drop(acc_unused_namespaces, [namespace])
+        }
+
+      # All other attr are saved as is, without altering the accumulators
+      _ ->
+        {[attr | acc_attrs], acc_used_namespaces, acc_unused_namespaces}
+    end
+  end
 end
