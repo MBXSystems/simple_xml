@@ -15,7 +15,7 @@ lint:
     RUN MIX_ENV=test mix lint
 
 setup-base:
-    ARG ELIXIR_BASE=1.15.2-erlang-26.0.2-ubuntu-jammy-20230126
+    ARG ELIXIR_BASE=1.17.3-erlang-27.1.1-ubuntu-noble-20241009
     FROM hexpm/elixir:$ELIXIR_BASE
     RUN apt-get update
     RUN apt-get install -y git build-essential
