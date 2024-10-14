@@ -23,12 +23,12 @@ jobs:
       fail-fast: false
       matrix:
         elixirbase:
-          - "1.15.2-erlang-26.0.2-ubuntu-jammy-20230126"
+          - "1.17.3-erlang-27.1.1-ubuntu-noble-20241009"
     steps:
       - uses: earthly/actions-setup@v1
       - uses: actions/checkout@v3
       - name: ecto test under ${{ matrix.elixirbase }}
-        run: earthly -P --ci --build-arg ELIXIR_BASE=${{ matrix.elixirbase }} +test
+        run: earthly +test -P --ci --ELIXIR_BASE=${{ matrix.elixirbase }}
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -38,12 +38,12 @@ jobs:
       fail-fast: false
       matrix:
         elixirbase:
-          - "1.15.2-erlang-26.0.2-ubuntu-jammy-20230126"
+          - "1.17.3-erlang-27.1.1-ubuntu-noble-20241009"
     steps:
       - uses: earthly/actions-setup@v1
       - uses: actions/checkout@v3
       - name: ecto lint under ${{ matrix.elixirbase }}
-        run: earthly -P --ci --build-arg ELIXIR_BASE=${{ matrix.elixirbase }} +lint
+        run: earthly +lint -P --ci --ELIXIR_BASE=${{ matrix.elixirbase }}
       - name: Cache PLT files
         id: cache_plt
         uses: actions/cache@v3
