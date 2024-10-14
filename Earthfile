@@ -7,7 +7,7 @@ test:
 
 lint:
     FROM +setup-base
-    COPY config ./config
+    COPY .dialyzer.ignore.exs ./
     COPY .formatter.exs ./
     RUN MIX_ENV=test mix deps.unlock --check-unused
     RUN MIX_ENV=test mix clean
