@@ -1,5 +1,17 @@
 # Changelog for simple_xml
 
+
+## v1.2.0
+
+* Added support for [InclusiveNamespaces PrefixList](https://www.w3.org/TR/xml-exc-c14n/#def-InclusiveNamespaces-PrefixList)
+
+## v1.1.0
+
+* Updated to Elixir v1.17
+* Updated dependencies
+* Fixed linting errors
+* Added support for attribute namespaces
+
 ## v1.0.1
 
 * Minor documentation fix
