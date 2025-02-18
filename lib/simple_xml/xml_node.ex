@@ -135,11 +135,18 @@ defmodule SimpleXml.XmlNode do
       {:error, {:no_children_found, ["bar"]}}
 
   """
-  @spec children(xml_node()) :: {:ok, [String.t() | xml_node()]}
-  def children({_node, _attrs, [head | _tail] = children}) when is_binary(head),
-    do: {:error, {:no_children_found, children}}
-
-  def children({_node, _attrs, children}) when is_list(children), do: {:ok, children}
+  @spec children(xml_node()) ::
+          {:ok, [String.t() | xml_node()]}
+          | {:error, {:no_children_found, [String.t() | xml_node()]}}
+  def children({_node, _attrs, children}) do
+    children
+    |> Enum.reject(&(is_binary(&1) && String.trim(&1) == ""))
+    |> case do
+      [] -> {:error, {:no_children_found, children}}
+      [head | _tail] when is_binary(head) -> {:error, {:no_children_found, children}}
+      children -> {:ok, children}
+    end
+  end
 
   @doc """
   Returns all children that match the given child_name filter.  Filtering matches that of
