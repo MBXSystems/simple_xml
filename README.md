@@ -11,6 +11,18 @@ A simplified Elixir string-based XML processor that avoids the atom exhaustion v
 
 This library adds some basic operations for traversing the XML document and obtaining attributes and text values.
 
+## Installation
+
+The package can be installed, via [Hex](https://hex.pm/packages/simple_xml), by adding `simple_xml` to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:simple_xml, "~> 1.0.0"}
+  ]
+end
+```
+
 ## Usage
 
 ### Parsing
@@ -34,17 +46,6 @@ XML digests and signatures can be verified via the following function.
 
 We leave it up to the caller to provide the public key against which verify the signature.  Please see `SimpleXml.verify/2` documentation for detailed examples.
 
-## Installation
-
-The package can be installed, via [Hex](https://hex.pm/packages/simple_xml), by adding `simple_xml` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:simple_xml, "~> 1.0.0"}
-  ]
-end
-```
 
 ## Contributing
 
