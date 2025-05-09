@@ -120,7 +120,7 @@ defmodule SimpleXml do
          :ok <- verify_digest(digest_value, computed_digest),
          {:ok, sig_value_node} <- XmlNode.first_child(signature_node, ~r/.*:?SignatureValue$/i),
          {:ok, signature_value} <- XmlNode.text(sig_value_node),
-         {:ok, decoded_signature_value} <- Base.decode64(signature_value) do
+         {:ok, decoded_signature_value} <- Base.decode64(signature_value, ignore: :whitespace) do
       case :public_key.verify(signed_info_xml, :sha256, decoded_signature_value, public_key) do
         true -> :ok
         _ -> {:error, :signature_verification_failed}
