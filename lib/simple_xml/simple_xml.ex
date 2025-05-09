@@ -44,8 +44,8 @@ defmodule SimpleXml do
     * Canonicalization method is [XML-ENC-C14N](http://www.w3.org/2001/10/xml-exc-c14n)
     * InclusiveNamespaces PrefixList is supported [https://www.w3.org/TR/xml-exc-c14n/#def-InclusiveNamespaces-PrefixList]
     * Transformation method includes [XMLDSIG-enveloped-signature](http://www.w3.org/2000/09/xmldsig#enveloped-signature)
-    * Digest method is [XMLENC-SHA256](http://www.w3.org/2001/04/xmlenc#sha256)
-    * Signature method is [XMLDSIG-SHA256](http://www.w3.org/2001/04/xmldsig-more#rsa-sha256)
+    * Digest method is [XMLENC-SHA256](http://www.w3.org/2001/04/xmlenc#sha256) or [XMLDSIG-SHA1](http://www.w3.org/2000/09/xmldsig#sha1)
+    * Signature method is [XMLDSIG-SHA256](http://www.w3.org/2001/04/xmldsig-more#rsa-sha256) or [XMLDSIG-RSA-SHA1](http://www.w3.org/2000/09/xmldsig#rsa-sha1)
 
   Arguments:
     * node: The xml_node corresponding to the document or portion of the document to be verified
@@ -106,22 +106,29 @@ defmodule SimpleXml do
          {:ok, signed_info_node} <- canonicalized_signed_info(signature_node),
          signed_info_xml <- XmlNode.to_string(signed_info_node),
          {:ok, reference_node} <- XmlNode.first_child(signed_info_node, ~r/.*:?Reference$/i),
+         {:ok, sig_method_node} <-
+           XmlNode.first_child(signed_info_node, ~r/.*:?SignatureMethod$/i),
+         {:ok, sig_algorithm} <- XmlNode.attribute(sig_method_node, "Algorithm"),
+         sig_hash = get_hash(sig_algorithm),
          {:ok, reference_uri} <- XmlNode.attribute(reference_node, "URI"),
          {:ok, transforms_node} <- XmlNode.first_child(reference_node, ~r/.*:?Transforms$/i),
          {:ok, transforms} <- XmlNode.children(transforms_node),
          inclusive_namespaces <- get_inclusive_namespaces(transforms),
          :ok <- verify_signature_reference_uri(node_id, reference_uri),
+         {:ok, digest_method_node} <- XmlNode.first_child(reference_node, ~r/.*:?DigestMethod$/i),
+         {:ok, digest_algorithm} <- XmlNode.attribute(digest_method_node, "Algorithm"),
+         digest_hash = get_hash(digest_algorithm),
          {:ok, digest_value_node} <- XmlNode.first_child(reference_node, ~r/.*:?DigestValue$/i),
          {:ok, digest_value} <- XmlNode.text(digest_value_node),
          node <-
            remove_enveloped_signature(node)
            |> XmlNode.canonicalize(inclusive_namespaces: inclusive_namespaces),
-         computed_digest <- sha256_digest(node),
+         computed_digest <- hash_digest(node, digest_hash),
          :ok <- verify_digest(digest_value, computed_digest),
          {:ok, sig_value_node} <- XmlNode.first_child(signature_node, ~r/.*:?SignatureValue$/i),
          {:ok, signature_value} <- XmlNode.text(sig_value_node),
          {:ok, decoded_signature_value} <- Base.decode64(signature_value, ignore: :whitespace) do
-      case :public_key.verify(signed_info_xml, :sha256, decoded_signature_value, public_key) do
+      case :public_key.verify(signed_info_xml, sig_hash, decoded_signature_value, public_key) do
         true -> :ok
         _ -> {:error, :signature_verification_failed}
       end
@@ -139,11 +146,16 @@ defmodule SimpleXml do
   defp remove_enveloped_signature(node) when is_tuple(node),
     do: node |> XmlNode.drop_children(~r/.*:?Signature$/)
 
-  @spec sha256_digest(xml_node()) :: String.t()
-  defp sha256_digest(node) when is_tuple(node) do
+  @spec get_hash(String.t()) :: :sha256 | :sha
+  defp get_hash("http://www.w3.org/2000/09/xmldsig#rsa-sha1"), do: :sha
+  defp get_hash("http://www.w3.org/2000/09/xmldsig#sha1"), do: :sha
+  defp get_hash(_), do: :sha256
+
+  @spec hash_digest(xml_node(), :sha256 | :sha) :: String.t()
+  defp hash_digest(node, hash_type) when is_tuple(node) and hash_type in [:sha, :sha256] do
     node
     |> XmlNode.to_string()
-    |> then(&:crypto.hash(:sha256, &1))
+    |> then(&:crypto.hash(hash_type, &1))
     |> Base.encode64()
   end
 
