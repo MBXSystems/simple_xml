@@ -137,7 +137,7 @@ defmodule SimpleXml do
 
   @spec remove_enveloped_signature(xml_node()) :: xml_node()
   defp remove_enveloped_signature(node) when is_tuple(node),
-    do: node |> XmlNode.drop_children("*:Signature")
+    do: node |> XmlNode.drop_children(~r/.*:?Signature$/)
 
   @spec sha256_digest(xml_node()) :: String.t()
   defp sha256_digest(node) when is_tuple(node) do
