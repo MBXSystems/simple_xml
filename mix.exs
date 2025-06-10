@@ -40,7 +40,7 @@ defmodule SimpleXml.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:saxy, "~> 1.5.0"},
+      {:saxy, "~> 1.5"},
       {:x509, "~> 0.8.7"},
       {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
       {:credo, "~> 1.7.0", only: [:dev, :test], runtime: false},
