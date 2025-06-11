@@ -3,6 +3,7 @@
 ## v1.3.1
 
 * Upgrade dependencies to their latest version
+* Add .tool-versions file for development setup
 
 ## v1.3.0
 
