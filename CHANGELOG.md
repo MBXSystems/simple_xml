@@ -1,5 +1,9 @@
 # Changelog for simple_xml
 
+## v1.3.1
+
+* Upgrade dependencies to their latest version
+
 ## v1.3.0
 
 * Improve signature verification to support wider range of identity providers
