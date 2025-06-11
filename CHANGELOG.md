@@ -1,5 +1,17 @@
 # Changelog for simple_xml
 
+## v1.3.0
+
+* Improve signature verification to support wider range of identity providers
+* Relax Saxy dependency to ~> 1.5
+
+## v1.2.2
+
+* Minor README update
+
+## v1.2.1
+
+* Allow new lines when pulling children
 
 ## v1.2.0
 
