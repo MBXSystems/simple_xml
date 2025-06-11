@@ -33,7 +33,10 @@ defmodule SimpleXml.MixProject do
     [
       files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/MBXSystems/simple_xml"}
+      links: %{
+        "Changelog" => "https://github.com/MBXSystems/simple_xml/blob/main/CHANGELOG.md",
+        "GitHub" => "https://github.com/MBXSystems/simple_xml"
+      }
     ]
   end
 
