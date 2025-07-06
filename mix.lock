@@ -16,5 +16,5 @@
   "nimble_parsec": {:hex, :nimble_parsec, "1.4.2", "8efba0122db06df95bfaa78f791344a89352ba04baedd3849593bfce4d0dc1c6", [:mix], [], "hexpm", "4b21398942dda052b403bbe1da991ccd03a053668d147d53fb8c4e0efe09c973"},
   "ranch": {:hex, :ranch, "2.2.0", "25528f82bc8d7c6152c57666ca99ec716510fe0925cb188172f41ce93117b1b0", [:make, :rebar3], [], "hexpm", "fa0b99a1780c80218a4197a59ea8d3bdae32fbff7e88527d7d8a4787eff4f8e7"},
   "saxy": {:hex, :saxy, "1.6.0", "02cb4e9bd045f25ac0c70fae8164754878327ee393c338a090288210b02317ee", [:mix], [], "hexpm", "ef42eb4ac983ca77d650fbdb68368b26570f6cc5895f0faa04d34a6f384abad3"},
-  "x509": {:hex, :x509, "0.8.10", "5d1ec6d5f4db31982f9dc34e6a1eebd631d04599e0b6c1c259f1dadd4495e11f", [:mix], [], "hexpm", "a191221665af28b9bdfff0c986ef55f80e126d8ce751bbdf6cefa846410140c0"},
+  "x509": {:hex, :x509, "0.9.1", "c92026a17b7d93f19029842ca218f82ec1f1e7cc9d4aa0c48327ee778f7f482e", [:mix], [], "hexpm", "99328951a1480cfd7b1b8aa688f857f7f5bbea03077b78cad211fb3b30c2f4a8"},
 }

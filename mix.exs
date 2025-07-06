@@ -4,7 +4,7 @@ defmodule SimpleXml.MixProject do
   def project do
     [
       app: :simple_xml,
-      version: "1.3.1",
+      version: "1.3.2",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -44,7 +44,7 @@ defmodule SimpleXml.MixProject do
   defp deps do
     [
       {:saxy, "~> 1.5"},
-      {:x509, "~> 0.8.7"},
+      {:x509, "~> 0.9.0"},
       {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
       {:credo, "~> 1.7.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.3", only: [:dev, :test], runtime: false},

@@ -1,5 +1,10 @@
 # Changelog for simple_xml
 
+
+## v1.3.2
+
+* Upgrade x509 to v0.9.1
+
 ## v1.3.1
 
 * Upgrade dependencies to their latest version
