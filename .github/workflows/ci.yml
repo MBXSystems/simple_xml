@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         elixirbase:
-          - "1.17.3-erlang-27.1.1-ubuntu-noble-20241009"
+          - "1.18.4-erlang-28.0.1-ubuntu-noble-20250619"
     steps:
       - uses: earthly/actions-setup@v1
       - uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         elixirbase:
-          - "1.17.3-erlang-27.1.1-ubuntu-noble-20241009"
+          - "1.18.4-erlang-28.0.1-ubuntu-noble-20250619"
     steps:
       - uses: earthly/actions-setup@v1
       - uses: actions/checkout@v3
