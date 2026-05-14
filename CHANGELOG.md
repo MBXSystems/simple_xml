@@ -1,6 +1,10 @@
 # Changelog for simple_xml
 
 
+## v1.3.3
+
+* Fix `SimpleXml.verify/2` when the Signature element inherits its `xmlns` prefix from an ancestor instead of redeclaring it (Cisco DUO behavior). Previously failed with `{:error, :namesapce_attribute_not_found}`; the namespace declaration is now resolved against the outer node being verified when the Signature element does not carry its own.
+
 ## v1.3.2
 
 * Upgrade x509 to v0.9.1
