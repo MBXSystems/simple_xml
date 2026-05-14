@@ -1,5 +1,8 @@
 # Changelog for simple_xml
 
+## v1.3.4
+
+* Updating dependencies to latest version.
 
 ## v1.3.3
 
